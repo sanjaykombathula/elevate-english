@@ -15,7 +15,7 @@ export default function OnboardingPage() {
   const navigate = useNavigate();
   const { completeOnboarding } = useApp();
   const [step, setStep] = useState(0);
-  const [data, setData] = useState({ name: '', college: '', year: '3rd', branch: 'CSE', level: 'Intermediate' as const, goal: '', dailyTarget: 20 });
+  const [data, setData] = useState<{ name: string; college: string; year: string; branch: string; level: 'Beginner' | 'Intermediate' | 'Advanced'; goal: string; dailyTarget: number }>({ name: '', college: '', year: '3rd', branch: 'CSE', level: 'Intermediate', goal: '', dailyTarget: 20 });
 
   const canNext = () => {
     if (step === 0) return data.name.trim().length > 0;
