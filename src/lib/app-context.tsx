@@ -143,6 +143,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setState((s) => ({
       ...s,
       user,
+      isAdmin,
       onboardingComplete,
       lessonProgress,
       dailyProgress,
