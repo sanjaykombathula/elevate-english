@@ -80,6 +80,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     user: null,
     session: null,
     isAuthenticated: false,
+    isAdmin: false,
     onboardingComplete: false,
     loading: true,
     lessonProgress: {},
