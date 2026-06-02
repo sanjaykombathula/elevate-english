@@ -343,6 +343,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return 'F';
   };
 
+  const claimAdminIfNone = async (): Promise<boolean> => {
+    const { data, error } = await supabase.rpc('claim_admin_if_none');
+    if (error) return false;
+    if (state.session?.user) await loadUserData(state.session.user.id);
+    return !!data;
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -358,6 +365,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         markWordLearned,
         calculateMarks,
         getGrade,
+        claimAdminIfNone,
       }}
     >
       {children}
