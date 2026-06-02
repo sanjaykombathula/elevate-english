@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/lib/app-context';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Home, BarChart3, User, Mic, Briefcase, GraduationCap, Menu, X, FlameIcon, Trophy, LogOut } from 'lucide-react';
+import { BookOpen, Home, BarChart3, User, Mic, Briefcase, GraduationCap, Menu, X, FlameIcon, Trophy, LogOut, ShieldCheck } from 'lucide-react';
 
 const navItems = [
   { path: '/dashboard', label: 'Home', icon: Home },
