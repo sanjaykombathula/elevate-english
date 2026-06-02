@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/lib/app-context';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Home, BarChart3, User, Mic, Briefcase, GraduationCap, Menu, X, FlameIcon, Trophy, LogOut } from 'lucide-react';
+import { BookOpen, Home, BarChart3, User, Mic, Briefcase, GraduationCap, Menu, X, FlameIcon, Trophy, LogOut, ShieldCheck } from 'lucide-react';
 
 const navItems = [
   { path: '/dashboard', label: 'Home', icon: Home },
@@ -17,7 +17,8 @@ const navItems = [
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useApp();
+  const { user, logout, isAdmin } = useApp();
+  const allNav = isAdmin ? [...navItems, { path: '/admin', label: 'Admin', icon: ShieldCheck }] : navItems;
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -63,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex flex-col w-60 min-h-[calc(100vh-4rem)] border-r bg-card p-4 gap-1 sticky top-16">
-          {navItems.map(item => {
+          {allNav.map(item => {
             const active = location.pathname === item.path;
             return (
               <Link key={item.path} to={item.path}
@@ -87,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-foreground/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
               <motion.aside initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 className="fixed left-0 top-16 bottom-0 w-60 bg-card border-r z-50 p-4 flex flex-col gap-1 lg:hidden">
-                {navItems.map(item => {
+                {allNav.map(item => {
                   const active = location.pathname === item.path;
                   return (
                     <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}

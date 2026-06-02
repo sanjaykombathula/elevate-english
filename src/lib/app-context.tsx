@@ -8,6 +8,7 @@ interface AppState {
   user: User | null;
   session: Session | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   onboardingComplete: boolean;
   loading: boolean;
   lessonProgress: Record<string, LessonProgress>;
@@ -29,6 +30,7 @@ interface AppContextType extends AppState {
   markWordLearned: (wordId: string) => Promise<void>;
   calculateMarks: (correct: boolean, attemptNumber: number, maxMarks: number) => number;
   getGrade: (percentage: number) => string;
+  claimAdminIfNone: () => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -78,6 +80,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     user: null,
     session: null,
     isAuthenticated: false,
+    isAdmin: false,
     onboardingComplete: false,
     loading: true,
     lessonProgress: {},
@@ -88,13 +91,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const loadUserData = useCallback(async (userId: string) => {
-    const [profileRes, lessonsRes, dailyRes, wordsRes, achRes] = await Promise.all([
+    const [profileRes, lessonsRes, dailyRes, wordsRes, achRes, rolesRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
       supabase.from('lesson_progress').select('*').eq('user_id', userId),
       supabase.from('daily_progress').select('*').eq('user_id', userId).eq('date', todayStr()).maybeSingle(),
       supabase.from('user_words').select('*').eq('user_id', userId),
       supabase.from('user_achievements').select('*').eq('user_id', userId),
+      supabase.from('user_roles').select('role').eq('user_id', userId),
     ]);
+    const isAdmin = !!(rolesRes.data || []).find((r: any) => r.role === 'admin');
 
     const profileRow = profileRes.data;
     const user = profileRow ? rowToUser(profileRow) : null;
@@ -138,6 +143,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setState((s) => ({
       ...s,
       user,
+      isAdmin,
       onboardingComplete,
       lessonProgress,
       dailyProgress,
@@ -158,6 +164,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setState((s) => ({
           ...s,
           user: null,
+          isAdmin: false,
           onboardingComplete: false,
           lessonProgress: {},
           dailyProgress: emptyDaily(),
@@ -337,6 +344,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return 'F';
   };
 
+  const claimAdminIfNone = async (): Promise<boolean> => {
+    const { data, error } = await supabase.rpc('claim_admin_if_none');
+    if (error) return false;
+    if (state.session?.user) await loadUserData(state.session.user.id);
+    return !!data;
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -352,6 +366,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         markWordLearned,
         calculateMarks,
         getGrade,
+        claimAdminIfNone,
       }}
     >
       {children}

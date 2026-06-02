@@ -14,6 +14,7 @@ import PlacementPage from "./pages/Placement";
 import MockTestPage from "./pages/MockTest";
 import ProgressPage from "./pages/Progress";
 import ProfilePage from "./pages/Profile";
+import AdminPage from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ function AppRoutes() {
       <Route path="/mock-test" element={<Protected><MockTestPage /></Protected>} />
       <Route path="/progress" element={<Protected><ProgressPage /></Protected>} />
       <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
+      <Route path="/admin" element={<Protected requireOnboarding={false}><AdminPage /></Protected>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
