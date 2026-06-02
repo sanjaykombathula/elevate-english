@@ -8,6 +8,7 @@ interface AppState {
   user: User | null;
   session: Session | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   onboardingComplete: boolean;
   loading: boolean;
   lessonProgress: Record<string, LessonProgress>;
@@ -29,6 +30,7 @@ interface AppContextType extends AppState {
   markWordLearned: (wordId: string) => Promise<void>;
   calculateMarks: (correct: boolean, attemptNumber: number, maxMarks: number) => number;
   getGrade: (percentage: number) => string;
+  claimAdminIfNone: () => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
