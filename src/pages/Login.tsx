@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/lib/app-context';
 import { motion } from 'framer-motion';
 import { GraduationCap, Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react';
@@ -7,9 +7,9 @@ import { toast } from 'sonner';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useApp();
+  const { login, signup, signInWithGoogle } = useApp();
   const [isSignup, setIsSignup] = useState(false);
-  const { signup } = useApp();
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -26,18 +26,27 @@ export default function LoginPage() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    if (isSignup) {
-      const ok = signup(form.name, form.email, form.password);
-      if (ok) { toast.success('Account created!'); navigate('/onboarding'); }
-      else toast.error('Signup failed. Please try again.');
-    } else {
-      const ok = login(form.email, form.password);
-      if (ok) { toast.success('Welcome back!'); navigate('/dashboard'); }
-      else toast.error('Invalid credentials');
+    setSubmitting(true);
+    try {
+      if (isSignup) {
+        const ok = await signup(form.name, form.email, form.password);
+        if (ok) { toast.success('Account created!'); navigate('/onboarding'); }
+        else toast.error('Signup failed. Email may already be in use.');
+      } else {
+        const ok = await login(form.email, form.password);
+        if (ok) { toast.success('Welcome back!'); navigate('/'); }
+        else toast.error('Invalid credentials');
+      }
+    } finally {
+      setSubmitting(false);
     }
+  };
+
+  const handleGoogle = async () => {
+    try { await signInWithGoogle(); } catch { toast.error('Google sign-in failed'); }
   };
 
   const isValid = isSignup
