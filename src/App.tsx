@@ -14,6 +14,7 @@ import PlacementPage from "./pages/Placement";
 import MockTestPage from "./pages/MockTest";
 import ProgressPage from "./pages/Progress";
 import ProfilePage from "./pages/Profile";
+import AdminPage from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
