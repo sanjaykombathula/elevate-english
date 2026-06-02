@@ -17,7 +17,8 @@ const navItems = [
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useApp();
+  const { user, logout, isAdmin } = useApp();
+  const allNav = isAdmin ? [...navItems, { path: '/admin', label: 'Admin', icon: ShieldCheck }] : navItems;
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
