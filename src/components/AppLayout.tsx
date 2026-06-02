@@ -64,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex flex-col w-60 min-h-[calc(100vh-4rem)] border-r bg-card p-4 gap-1 sticky top-16">
-          {navItems.map(item => {
+          {allNav.map(item => {
             const active = location.pathname === item.path;
             return (
               <Link key={item.path} to={item.path}
@@ -88,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-foreground/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
               <motion.aside initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 className="fixed left-0 top-16 bottom-0 w-60 bg-card border-r z-50 p-4 flex flex-col gap-1 lg:hidden">
-                {navItems.map(item => {
+                {allNav.map(item => {
                   const active = location.pathname === item.path;
                   return (
                     <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
