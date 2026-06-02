@@ -91,13 +91,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const loadUserData = useCallback(async (userId: string) => {
-    const [profileRes, lessonsRes, dailyRes, wordsRes, achRes] = await Promise.all([
+    const [profileRes, lessonsRes, dailyRes, wordsRes, achRes, rolesRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
       supabase.from('lesson_progress').select('*').eq('user_id', userId),
       supabase.from('daily_progress').select('*').eq('user_id', userId).eq('date', todayStr()).maybeSingle(),
       supabase.from('user_words').select('*').eq('user_id', userId),
       supabase.from('user_achievements').select('*').eq('user_id', userId),
+      supabase.from('user_roles').select('role').eq('user_id', userId),
     ]);
+    const isAdmin = !!(rolesRes.data || []).find((r: any) => r.role === 'admin');
 
     const profileRow = profileRes.data;
     const user = profileRow ? rowToUser(profileRow) : null;
