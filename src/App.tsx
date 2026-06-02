@@ -47,6 +47,7 @@ function AppRoutes() {
       <Route path="/mock-test" element={<Protected><MockTestPage /></Protected>} />
       <Route path="/progress" element={<Protected><ProgressPage /></Protected>} />
       <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
+      <Route path="/admin" element={<Protected requireOnboarding={false}><AdminPage /></Protected>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
