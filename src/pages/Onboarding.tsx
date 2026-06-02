@@ -24,13 +24,13 @@ export default function OnboardingPage() {
     return true;
   };
 
-  const finish = () => {
+  const finish = async () => {
     const pathMap: Record<string, string> = {
       'Beginner': 'Beginner Path',
       'Intermediate': 'Communication Builder Path',
       'Advanced': 'Placement Ready Path',
     };
-    completeOnboarding({ ...data, learningPath: pathMap[data.level] || 'Communication Builder Path' });
+    await completeOnboarding({ ...data, learningPath: pathMap[data.level] || 'Communication Builder Path' });
     navigate('/dashboard');
   };
 

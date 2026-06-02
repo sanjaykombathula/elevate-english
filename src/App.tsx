@@ -18,21 +18,34 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function Protected({ children, requireOnboarding = true }: { children: JSX.Element; requireOnboarding?: boolean }) {
+  const { isAuthenticated, onboardingComplete, loading } = useApp();
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">Loading...</div>;
+  if (!isAuthenticated) return <Navigate to="/" replace />;
+  if (requireOnboarding && !onboardingComplete) return <Navigate to="/onboarding" replace />;
+  return children;
+}
+
 function AppRoutes() {
-  const { isAuthenticated, onboardingComplete } = useApp();
+  const { isAuthenticated, onboardingComplete, loading } = useApp();
   return (
     <Routes>
-      <Route path="/" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
-      <Route path="/onboarding" element={isAuthenticated ? <OnboardingPage /> : <Navigate to="/" />} />
-      <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/" />} />
-      <Route path="/daily-practice" element={isAuthenticated ? <DailyPracticePage /> : <Navigate to="/" />} />
-      <Route path="/grammar" element={isAuthenticated ? <GrammarPage /> : <Navigate to="/" />} />
-      <Route path="/vocabulary" element={isAuthenticated ? <VocabularyPage /> : <Navigate to="/" />} />
-      <Route path="/speaking" element={isAuthenticated ? <SpeakingPage /> : <Navigate to="/" />} />
-      <Route path="/placement" element={isAuthenticated ? <PlacementPage /> : <Navigate to="/" />} />
-      <Route path="/mock-test" element={isAuthenticated ? <MockTestPage /> : <Navigate to="/" />} />
-      <Route path="/progress" element={isAuthenticated ? <ProgressPage /> : <Navigate to="/" />} />
-      <Route path="/profile" element={isAuthenticated ? <ProfilePage /> : <Navigate to="/" />} />
+      <Route path="/" element={
+        loading ? <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">Loading...</div>
+        : !isAuthenticated ? <LoginPage />
+        : !onboardingComplete ? <Navigate to="/onboarding" />
+        : <Navigate to="/dashboard" />
+      } />
+      <Route path="/onboarding" element={<Protected requireOnboarding={false}><OnboardingPage /></Protected>} />
+      <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
+      <Route path="/daily-practice" element={<Protected><DailyPracticePage /></Protected>} />
+      <Route path="/grammar" element={<Protected><GrammarPage /></Protected>} />
+      <Route path="/vocabulary" element={<Protected><VocabularyPage /></Protected>} />
+      <Route path="/speaking" element={<Protected><SpeakingPage /></Protected>} />
+      <Route path="/placement" element={<Protected><PlacementPage /></Protected>} />
+      <Route path="/mock-test" element={<Protected><MockTestPage /></Protected>} />
+      <Route path="/progress" element={<Protected><ProgressPage /></Protected>} />
+      <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
