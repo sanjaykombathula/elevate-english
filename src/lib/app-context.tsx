@@ -164,6 +164,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setState((s) => ({
           ...s,
           user: null,
+          isAdmin: false,
           onboardingComplete: false,
           lessonProgress: {},
           dailyProgress: emptyDaily(),
