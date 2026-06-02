@@ -14,7 +14,210 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_progress: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          marks_earned: number
+          streak_maintained: boolean
+          tasks_completed: number
+          total_tasks: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          marks_earned?: number
+          streak_maintained?: boolean
+          tasks_completed?: number
+          total_tasks?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          marks_earned?: number
+          streak_maintained?: boolean
+          tasks_completed?: number
+          total_tasks?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lesson_progress: {
+        Row: {
+          attempts: Json
+          completed: boolean
+          created_at: string
+          id: string
+          lesson_id: string
+          percentage: number
+          score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: Json
+          completed?: boolean
+          created_at?: string
+          id?: string
+          lesson_id: string
+          percentage?: number
+          score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: Json
+          completed?: boolean
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          percentage?: number
+          score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          badges: string[] | null
+          branch: string | null
+          college: string | null
+          created_at: string
+          daily_target: number | null
+          email: string | null
+          goal: string | null
+          grammar_score: number | null
+          id: string
+          joined_date: string
+          learning_path: string | null
+          lessons_completed: number | null
+          level: string | null
+          name: string
+          onboarding_complete: boolean | null
+          placement_readiness_score: number | null
+          speaking_score: number | null
+          streak: number | null
+          total_marks: number | null
+          updated_at: string
+          vocabulary_score: number | null
+          year: string | null
+        }
+        Insert: {
+          badges?: string[] | null
+          branch?: string | null
+          college?: string | null
+          created_at?: string
+          daily_target?: number | null
+          email?: string | null
+          goal?: string | null
+          grammar_score?: number | null
+          id: string
+          joined_date?: string
+          learning_path?: string | null
+          lessons_completed?: number | null
+          level?: string | null
+          name?: string
+          onboarding_complete?: boolean | null
+          placement_readiness_score?: number | null
+          speaking_score?: number | null
+          streak?: number | null
+          total_marks?: number | null
+          updated_at?: string
+          vocabulary_score?: number | null
+          year?: string | null
+        }
+        Update: {
+          badges?: string[] | null
+          branch?: string | null
+          college?: string | null
+          created_at?: string
+          daily_target?: number | null
+          email?: string | null
+          goal?: string | null
+          grammar_score?: number | null
+          id?: string
+          joined_date?: string
+          learning_path?: string | null
+          lessons_completed?: number | null
+          level?: string | null
+          name?: string
+          onboarding_complete?: boolean | null
+          placement_readiness_score?: number | null
+          speaking_score?: number | null
+          streak?: number | null
+          total_marks?: number | null
+          updated_at?: string
+          vocabulary_score?: number | null
+          year?: string | null
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          progress: number
+          unlocked: boolean
+          unlocked_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          progress?: number
+          unlocked?: boolean
+          unlocked_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          progress?: number
+          unlocked?: boolean
+          unlocked_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_words: {
+        Row: {
+          favorite: boolean
+          id: string
+          learned: boolean
+          updated_at: string
+          user_id: string
+          word_id: string
+        }
+        Insert: {
+          favorite?: boolean
+          id?: string
+          learned?: boolean
+          updated_at?: string
+          user_id: string
+          word_id: string
+        }
+        Update: {
+          favorite?: boolean
+          id?: string
+          learned?: boolean
+          updated_at?: string
+          user_id?: string
+          word_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
