@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/lib/app-context';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Home, BarChart3, User, Mic, Briefcase, GraduationCap, Menu, X, FlameIcon, Trophy, LogOut, ShieldCheck } from 'lucide-react';
+import { BookOpen, Home, BarChart3, User, Mic, Briefcase, GraduationCap, Menu, X, FlameIcon, Trophy, LogOut, ShieldCheck, Library, BookMarked } from 'lucide-react';
 
 const navItems = [
   { path: '/dashboard', label: 'Home', icon: Home },
+  { path: '/courses', label: 'Courses', icon: Library },
   { path: '/daily-practice', label: 'Daily', icon: BookOpen },
   { path: '/grammar', label: 'Grammar', icon: GraduationCap },
   { path: '/vocabulary', label: 'Vocab', icon: BookOpen },
@@ -18,7 +19,7 @@ const navItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isAdmin } = useApp();
-  const allNav = isAdmin ? [...navItems, { path: '/admin', label: 'Admin', icon: ShieldCheck }] : navItems;
+  const allNav = isAdmin ? [...navItems, { path: '/admin', label: 'Admin', icon: ShieldCheck }, { path: '/admin/courses', label: 'LMS', icon: BookMarked }] : navItems;
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
