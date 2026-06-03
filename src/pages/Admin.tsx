@@ -3,7 +3,7 @@ import AppLayout from '@/components/AppLayout';
 import { useApp } from '@/lib/app-context';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
-import { Users, UserPlus, Upload, Download, Trash2, Search, ShieldCheck, FileSpreadsheet, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Users, UserPlus, Upload, Download, Trash2, Search, ShieldCheck, FileSpreadsheet, CheckCircle2, XCircle, Loader2, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
@@ -11,7 +11,9 @@ interface StudentRow {
   id: string;
   name: string | null;
   email: string | null;
+  phone: string | null;
   college: string | null;
+  department: string | null;
   year: string | null;
   branch: string | null;
   level: string | null;
@@ -21,6 +23,8 @@ interface StudentRow {
 }
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`;
+
+const emptyStudent = { name: '', email: '', password: '', phone: '', college: '', department: '', year: '', branch: '', level: 'Beginner' };
 
 function randomPassword(len = 12) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$';
@@ -36,11 +40,13 @@ export default function AdminPage() {
   const [search, setSearch] = useState('');
   const [claiming, setClaiming] = useState(false);
 
-  // Manual create
-  const [single, setSingle] = useState({ name: '', email: '', password: '', college: '', year: '', branch: '', level: 'Beginner' });
+  const [single, setSingle] = useState({ ...emptyStudent });
   const [creating, setCreating] = useState(false);
 
-  // Bulk upload
+  const [editing, setEditing] = useState<StudentRow | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const [parsedRows, setParsedRows] = useState<any[]>([]);
   const [bulkResult, setBulkResult] = useState<any>(null);
   const [bulkRunning, setBulkRunning] = useState(false);
@@ -49,7 +55,7 @@ export default function AdminPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('id,name,email,college,year,branch,level,total_marks,lessons_completed,created_at')
+      .select('id,name,email,phone,college,department,year,branch,level,total_marks,lessons_completed,created_at')
       .order('created_at', { ascending: false });
     if (error) toast.error(error.message);
     setStudents((data as StudentRow[]) || []);
@@ -58,14 +64,11 @@ export default function AdminPage() {
 
   useEffect(() => { if (isAdmin) loadStudents(); }, [isAdmin]);
 
-  const callCreate = async (users: any[]) => {
+  const callFn = async (payload: any) => {
     const res = await fetch(FN_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.access_token}`,
-      },
-      body: JSON.stringify({ users }),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify(payload),
     });
     return res.json();
   };
@@ -75,7 +78,7 @@ export default function AdminPage() {
     const ok = await claimAdminIfNone();
     setClaiming(false);
     if (ok) toast.success('You are now the admin');
-    else toast.error('An admin already exists. Ask them to grant you access.');
+    else toast.error('An admin already exists.');
   };
 
   const handleSingleCreate = async (e: React.FormEvent) => {
@@ -84,16 +87,54 @@ export default function AdminPage() {
     if (single.password.length < 8) { toast.error('Password must be at least 8 characters'); return; }
     setCreating(true);
     try {
-      const result = await callCreate([single]);
+      const result = await callFn({ users: [single] });
       const r = result?.results?.[0];
       if (r?.status === 'created') {
         toast.success(`Created ${single.email}`);
-        setSingle({ name: '', email: '', password: '', college: '', year: '', branch: '', level: 'Beginner' });
+        setSingle({ ...emptyStudent });
         loadStudents();
       } else {
         toast.error(r?.error || result?.error || 'Failed to create user');
       }
     } finally { setCreating(false); }
+  };
+
+  const openEdit = (s: StudentRow) => {
+    setEditing(s);
+    setEditForm({
+      name: s.name || '', email: s.email || '', phone: s.phone || '',
+      college: s.college || '', department: s.department || '',
+      year: s.year || '', branch: s.branch || '', level: s.level || 'Beginner',
+      password: '',
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    setSavingEdit(true);
+    try {
+      const payload: any = { ...editForm, id: editing.id };
+      if (!payload.password) delete payload.password;
+      const result = await callFn({ action: 'update', user: payload });
+      if (result?.ok) {
+        toast.success('Student updated');
+        setEditing(null);
+        loadStudents();
+      } else {
+        toast.error(result?.error || 'Update failed');
+      }
+    } finally { setSavingEdit(false); }
+  };
+
+  const deleteStudent = async (s: StudentRow) => {
+    if (!confirm(`Delete ${s.email}? This cannot be undone.`)) return;
+    const result = await callFn({ action: 'delete', id: s.id });
+    if (result?.ok) {
+      toast.success('Student deleted');
+      setStudents((prev) => prev.filter((x) => x.id !== s.id));
+    } else {
+      toast.error(result?.error || 'Delete failed');
+    }
   };
 
   const handleFile = async (file: File) => {
@@ -106,7 +147,9 @@ export default function AdminPage() {
         email: String(r.email || r.Email || '').trim(),
         password: String(r.password || r.Password || '').trim() || randomPassword(),
         name: String(r.name || r.Name || '').trim(),
+        phone: String(r.phone || r.Phone || '').trim(),
         college: String(r.college || r.College || '').trim(),
+        department: String(r.department || r.Department || '').trim(),
         year: String(r.year || r.Year || '').trim(),
         branch: String(r.branch || r.Branch || '').trim(),
         level: String(r.level || r.Level || 'Beginner').trim(),
@@ -123,7 +166,7 @@ export default function AdminPage() {
     if (!parsedRows.length) return;
     setBulkRunning(true);
     try {
-      const result = await callCreate(parsedRows);
+      const result = await callFn({ users: parsedRows });
       setBulkResult(result);
       toast.success(`Created ${result.created} / ${result.total}`);
       loadStudents();
@@ -134,8 +177,8 @@ export default function AdminPage() {
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([
-      { name: 'Aarav Kumar', email: 'aarav@example.com', password: 'TempPass123', college: 'JNTU Hyderabad', year: '3rd', branch: 'CSE', level: 'Intermediate' },
-      { name: 'Priya Sharma', email: 'priya@example.com', password: '', college: 'IIT Bombay', year: '2nd', branch: 'ECE', level: 'Beginner' },
+      { name: 'Aarav Kumar', email: 'aarav@example.com', password: 'TempPass123', phone: '9876543210', college: 'JNTU Hyderabad', department: 'Computer Science', year: '3rd', branch: 'CSE', level: 'Intermediate' },
+      { name: 'Priya Sharma', email: 'priya@example.com', password: '', phone: '', college: 'IIT Bombay', department: 'Electronics', year: '2nd', branch: 'ECE', level: 'Beginner' },
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Students');
@@ -148,7 +191,9 @@ export default function AdminPage() {
     return students.filter((s) =>
       (s.name || '').toLowerCase().includes(q) ||
       (s.email || '').toLowerCase().includes(q) ||
-      (s.college || '').toLowerCase().includes(q),
+      (s.college || '').toLowerCase().includes(q) ||
+      (s.department || '').toLowerCase().includes(q) ||
+      (s.phone || '').toLowerCase().includes(q),
     );
   }, [students, search]);
 
@@ -164,11 +209,8 @@ export default function AdminPage() {
             <p className="text-sm text-muted-foreground mt-2">
               Only administrators can manage student accounts. If no admin exists yet, you can claim the role below — this only works once.
             </p>
-            <button
-              onClick={handleClaimAdmin}
-              disabled={claiming}
-              className="mt-6 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 disabled:opacity-40 transition"
-            >
+            <button onClick={handleClaimAdmin} disabled={claiming}
+              className="mt-6 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 disabled:opacity-40 transition">
               {claiming ? 'Claiming...' : 'Claim admin (bootstrap)'}
             </button>
           </div>
@@ -185,7 +227,7 @@ export default function AdminPage() {
             <h1 className="font-display text-3xl font-bold flex items-center gap-2">
               <Users className="w-7 h-7 text-primary" /> Student Management
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">Create accounts manually or import from an Excel file.</p>
+            <p className="text-sm text-muted-foreground mt-1">Add, edit, delete, or bulk-import student accounts.</p>
           </div>
           <div className="text-sm text-muted-foreground tabular-nums">
             <span className="font-semibold text-foreground">{students.length}</span> students
@@ -197,7 +239,7 @@ export default function AdminPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl p-6 card-shadow">
             <div className="flex items-center gap-2 mb-4">
               <UserPlus className="w-5 h-5 text-primary" />
-              <h2 className="font-display text-lg font-bold">Create student manually</h2>
+              <h2 className="font-display text-lg font-bold">Add student</h2>
             </div>
             <form onSubmit={handleSingleCreate} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -205,18 +247,20 @@ export default function AdminPage() {
                   value={single.name} onChange={e => setSingle({ ...single, name: e.target.value })} />
                 <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Email *" type="email" required
                   value={single.email} onChange={e => setSingle({ ...single, email: e.target.value })} />
-                <div className="relative col-span-2">
+                <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Phone"
+                  value={single.phone} onChange={e => setSingle({ ...single, phone: e.target.value })} />
+                <div className="relative">
                   <input className="w-full px-3 py-2 rounded-lg border bg-background text-sm pr-20" placeholder="Password (min 8) *"
                     value={single.password} onChange={e => setSingle({ ...single, password: e.target.value })} />
                   <button type="button" onClick={() => setSingle({ ...single, password: randomPassword() })}
-                    className="absolute right-1 top-1 px-2 py-1 text-xs rounded-md bg-secondary hover:bg-secondary/70">Generate</button>
+                    className="absolute right-1 top-1 px-2 py-1 text-xs rounded-md bg-secondary hover:bg-secondary/70">Gen</button>
                 </div>
                 <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="College"
                   value={single.college} onChange={e => setSingle({ ...single, college: e.target.value })} />
+                <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Department"
+                  value={single.department} onChange={e => setSingle({ ...single, department: e.target.value })} />
                 <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Year"
                   value={single.year} onChange={e => setSingle({ ...single, year: e.target.value })} />
-                <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Branch"
-                  value={single.branch} onChange={e => setSingle({ ...single, branch: e.target.value })} />
                 <select className="px-3 py-2 rounded-lg border bg-background text-sm"
                   value={single.level} onChange={e => setSingle({ ...single, level: e.target.value })}>
                   <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
@@ -224,7 +268,7 @@ export default function AdminPage() {
               </div>
               <button disabled={creating} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:opacity-90 transition flex items-center justify-center gap-2">
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-                Create student
+                Add student
               </button>
             </form>
           </motion.div>
@@ -243,7 +287,7 @@ export default function AdminPage() {
             <label className="block border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/30 transition">
               <Upload className="w-6 h-6 mx-auto text-muted-foreground" />
               <p className="text-sm font-medium mt-2">Drop .xlsx or .csv here</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Columns: name, email, password, college, year, branch, level</p>
+              <p className="text-xs text-muted-foreground mt-0.5">name, email, password, phone, college, department, year, branch, level</p>
               <input type="file" accept=".xlsx,.xls,.csv" className="hidden"
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
             </label>
@@ -251,8 +295,7 @@ export default function AdminPage() {
             {parsedRows.length > 0 && (
               <div className="mt-4 space-y-3">
                 <div className="text-sm">
-                  <span className="font-semibold tabular-nums">{parsedRows.length}</span> rows ready to import.
-                  Missing passwords will be auto-generated.
+                  <span className="font-semibold tabular-nums">{parsedRows.length}</span> rows ready. Missing passwords are auto-generated.
                 </div>
                 <button onClick={runBulk} disabled={bulkRunning}
                   className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:opacity-90 transition flex items-center justify-center gap-2">
@@ -284,7 +327,7 @@ export default function AdminPage() {
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
               <input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Search by name, email, college..."
+                placeholder="Search by name, email, phone, college, department..."
                 className="w-full pl-10 pr-3 py-2 rounded-lg border bg-background text-sm" />
             </div>
             <button onClick={loadStudents} className="text-xs px-3 py-2 rounded-lg border hover:bg-secondary">Refresh</button>
@@ -296,29 +339,40 @@ export default function AdminPage() {
                 <tr>
                   <th className="text-left px-4 py-3">Name</th>
                   <th className="text-left px-4 py-3">Email</th>
+                  <th className="text-left px-4 py-3">Phone</th>
                   <th className="text-left px-4 py-3">College</th>
-                  <th className="text-left px-4 py-3">Year / Branch</th>
+                  <th className="text-left px-4 py-3">Department</th>
+                  <th className="text-left px-4 py-3">Year</th>
                   <th className="text-right px-4 py-3">Marks</th>
-                  <th className="text-right px-4 py-3">Lessons</th>
-                  <th className="text-left px-4 py-3">Joined</th>
+                  <th className="text-right px-4 py-3 w-24">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {loading && (
-                  <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">Loading...</td></tr>
-                )}
+                {loading && <tr><td colSpan={8} className="py-10 text-center text-muted-foreground">Loading...</td></tr>}
                 {!loading && filtered.length === 0 && (
-                  <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">No students yet. Create one above.</td></tr>
+                  <tr><td colSpan={8} className="py-10 text-center text-muted-foreground">No students yet. Add one above.</td></tr>
                 )}
                 {filtered.map((s) => (
                   <tr key={s.id} className="border-t hover:bg-secondary/30">
                     <td className="px-4 py-3 font-medium">{s.name || '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground">{s.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground tabular-nums">{s.phone || '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground">{s.college || '—'}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{[s.year, s.branch].filter(Boolean).join(' • ') || '—'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{s.department || '—'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{s.year || '—'}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{s.total_marks ?? 0}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{s.lessons_completed ?? 0}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => openEdit(s)} title="Edit"
+                          className="p-1.5 rounded-md hover:bg-primary/10 text-primary transition">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => deleteStudent(s)} title="Delete"
+                          className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive transition">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -326,6 +380,56 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit modal */}
+      {editing && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => !savingEdit && setEditing(null)}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            className="bg-card rounded-2xl p-6 max-w-lg w-full card-shadow" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-xl font-bold flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-primary" /> Edit student
+              </h2>
+              <button onClick={() => setEditing(null)} className="p-1 rounded-md hover:bg-secondary">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Name"
+                value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
+              <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Email" type="email"
+                value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+              <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Phone"
+                value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
+              <div className="relative">
+                <input className="w-full px-3 py-2 rounded-lg border bg-background text-sm pr-20" placeholder="New password (optional)"
+                  value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} />
+                <button type="button" onClick={() => setEditForm({ ...editForm, password: randomPassword() })}
+                  className="absolute right-1 top-1 px-2 py-1 text-xs rounded-md bg-secondary hover:bg-secondary/70">Gen</button>
+              </div>
+              <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="College"
+                value={editForm.college} onChange={e => setEditForm({ ...editForm, college: e.target.value })} />
+              <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Department"
+                value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} />
+              <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Year"
+                value={editForm.year} onChange={e => setEditForm({ ...editForm, year: e.target.value })} />
+              <select className="px-3 py-2 rounded-lg border bg-background text-sm"
+                value={editForm.level} onChange={e => setEditForm({ ...editForm, level: e.target.value })}>
+                <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+              </select>
+            </div>
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => setEditing(null)} disabled={savingEdit}
+                className="flex-1 py-2.5 rounded-xl border text-sm font-semibold hover:bg-secondary transition">Cancel</button>
+              <button onClick={saveEdit} disabled={savingEdit}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2">
+                {savingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
+                Save changes
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </AppLayout>
   );
 }

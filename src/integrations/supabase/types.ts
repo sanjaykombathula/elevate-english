@@ -93,6 +93,7 @@ export type Database = {
           college: string | null
           created_at: string
           daily_target: number | null
+          department: string | null
           email: string | null
           goal: string | null
           grammar_score: number | null
@@ -103,6 +104,7 @@ export type Database = {
           level: string | null
           name: string
           onboarding_complete: boolean | null
+          phone: string | null
           placement_readiness_score: number | null
           speaking_score: number | null
           streak: number | null
@@ -117,6 +119,7 @@ export type Database = {
           college?: string | null
           created_at?: string
           daily_target?: number | null
+          department?: string | null
           email?: string | null
           goal?: string | null
           grammar_score?: number | null
@@ -127,6 +130,7 @@ export type Database = {
           level?: string | null
           name?: string
           onboarding_complete?: boolean | null
+          phone?: string | null
           placement_readiness_score?: number | null
           speaking_score?: number | null
           streak?: number | null
@@ -141,6 +145,7 @@ export type Database = {
           college?: string | null
           created_at?: string
           daily_target?: number | null
+          department?: string | null
           email?: string | null
           goal?: string | null
           grammar_score?: number | null
@@ -151,6 +156,7 @@ export type Database = {
           level?: string | null
           name?: string
           onboarding_complete?: boolean | null
+          phone?: string | null
           placement_readiness_score?: number | null
           speaking_score?: number | null
           streak?: number | null
