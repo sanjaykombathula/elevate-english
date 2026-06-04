@@ -53,7 +53,9 @@ function AppRoutes() {
       <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
       <Route path="/admin" element={<Protected requireOnboarding={false}><AdminPage /></Protected>} />
       <Route path="/admin/courses" element={<Protected requireOnboarding={false}><AdminCoursesPage /></Protected>} />
+      <Route path="/admin/assessments" element={<Protected requireOnboarding={false}><AdminAssessmentsPage /></Protected>} />
       <Route path="/courses" element={<Protected><CoursesPage /></Protected>} />
+      <Route path="/assessments" element={<Protected><AssessmentsPage /></Protected>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
