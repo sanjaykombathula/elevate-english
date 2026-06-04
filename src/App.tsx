@@ -17,6 +17,8 @@ import ProfilePage from "./pages/Profile";
 import AdminPage from "./pages/Admin";
 import AdminCoursesPage from "./pages/AdminCourses";
 import CoursesPage from "./pages/Courses";
+import AdminAssessmentsPage from "./pages/AdminAssessments";
+import AssessmentsPage from "./pages/Assessments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,7 +53,9 @@ function AppRoutes() {
       <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
       <Route path="/admin" element={<Protected requireOnboarding={false}><AdminPage /></Protected>} />
       <Route path="/admin/courses" element={<Protected requireOnboarding={false}><AdminCoursesPage /></Protected>} />
+      <Route path="/admin/assessments" element={<Protected requireOnboarding={false}><AdminAssessmentsPage /></Protected>} />
       <Route path="/courses" element={<Protected><CoursesPage /></Protected>} />
+      <Route path="/assessments" element={<Protected><AssessmentsPage /></Protected>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
