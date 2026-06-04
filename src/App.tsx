@@ -17,6 +17,8 @@ import ProfilePage from "./pages/Profile";
 import AdminPage from "./pages/Admin";
 import AdminCoursesPage from "./pages/AdminCourses";
 import CoursesPage from "./pages/Courses";
+import AdminAssessmentsPage from "./pages/AdminAssessments";
+import AssessmentsPage from "./pages/Assessments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
