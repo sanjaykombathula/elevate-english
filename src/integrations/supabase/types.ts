@@ -14,6 +14,136 @@ export type Database = {
   }
   public: {
     Tables: {
+      assessment_attempts: {
+        Row: {
+          answers: Json
+          assessment_id: string
+          created_at: string
+          id: string
+          passed: boolean
+          percentage: number
+          score: number
+          submitted_at: string
+          total_marks: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          assessment_id: string
+          created_at?: string
+          id?: string
+          passed?: boolean
+          percentage?: number
+          score?: number
+          submitted_at?: string
+          total_marks?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          assessment_id?: string
+          created_at?: string
+          id?: string
+          passed?: boolean
+          percentage?: number
+          score?: number
+          submitted_at?: string
+          total_marks?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_attempts_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_questions: {
+        Row: {
+          assessment_id: string
+          correct_answer: string
+          created_at: string
+          id: string
+          marks: number
+          options: Json | null
+          order_index: number
+          question_text: string
+          question_type: string
+        }
+        Insert: {
+          assessment_id: string
+          correct_answer: string
+          created_at?: string
+          id?: string
+          marks?: number
+          options?: Json | null
+          order_index?: number
+          question_text: string
+          question_type?: string
+        }
+        Update: {
+          assessment_id?: string
+          correct_answer?: string
+          created_at?: string
+          id?: string
+          marks?: number
+          options?: Json | null
+          order_index?: number
+          question_text?: string
+          question_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_questions_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_minutes: number
+          id: string
+          passing_marks: number
+          published: boolean
+          title: string
+          total_marks: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          passing_marks?: number
+          published?: boolean
+          title: string
+          total_marks?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          passing_marks?: number
+          published?: boolean
+          title?: string
+          total_marks?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       course_assignments: {
         Row: {
           assigned_to_all: boolean
@@ -366,6 +496,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      submit_assessment: {
+        Args: { _answers: Json; _assessment_id: string }
+        Returns: Json
       }
     }
     Enums: {
