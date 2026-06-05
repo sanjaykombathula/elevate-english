@@ -30,6 +30,7 @@ export default function AdminAssessmentsPage() {
 
   const [attemptsOpen, setAttemptsOpen] = useState(false);
   const [attempts, setAttempts] = useState<(Attempt & { name?: string; email?: string })[]>([]);
+  const [courses, setCourses] = useState<CourseOpt[]>([]);
 
   const load = async () => {
     setLoading(true);
@@ -38,6 +39,10 @@ export default function AdminAssessmentsPage() {
     setList((data as Assessment[]) || []);
     setLoading(false);
   };
+  const loadCourses = async () => {
+    const { data } = await supabase.from('courses').select('id,title').order('title');
+    setCourses((data as CourseOpt[]) || []);
+  };
   const loadQuestions = async (id: string) => {
     setQLoading(true);
     const { data, error } = await supabase.from('assessment_questions').select('*').eq('assessment_id', id).order('order_index');
@@ -45,8 +50,9 @@ export default function AdminAssessmentsPage() {
     setQuestions((data as Question[]) || []);
     setQLoading(false);
   };
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+  useEffect(() => { if (isAdmin) { load(); loadCourses(); } }, [isAdmin]);
   useEffect(() => { if (selected) loadQuestions(selected.id); }, [selected]);
+
 
   if (!isAdmin) return <AppLayout><div className="container py-12 text-center text-muted-foreground">Admins only.</div></AppLayout>;
 
