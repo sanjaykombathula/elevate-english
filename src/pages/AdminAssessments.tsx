@@ -64,7 +64,7 @@ export default function AdminAssessmentsPage() {
 
   const saveAssessment = async () => {
     if (!aForm.title.trim()) return toast.error('Title required');
-    const payload = { title: aForm.title.trim(), description: aForm.description || null, duration_minutes: Number(aForm.duration_minutes) || 30, passing_marks: Number(aForm.passing_marks) || 0 };
+    const payload: any = { title: aForm.title.trim(), description: aForm.description || null, duration_minutes: Number(aForm.duration_minutes) || 30, passing_marks: Number(aForm.passing_marks) || 0, recommended_course_id: aForm.recommended_course_id || null };
     if (aModal.edit) {
       const { error } = await supabase.from('assessments').update(payload).eq('id', aModal.edit.id);
       if (error) return toast.error(error.message);
@@ -76,6 +76,7 @@ export default function AdminAssessmentsPage() {
     }
     setAModal({ open: false }); setAForm({ ...emptyA }); load();
   };
+
 
   const deleteAssessment = async (id: string) => {
     if (!confirm('Delete this assessment? All questions and attempts will be removed.')) return;
