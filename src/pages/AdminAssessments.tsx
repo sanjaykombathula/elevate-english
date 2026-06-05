@@ -341,6 +341,13 @@ export default function AdminAssessmentsPage() {
               <label className="text-xs"><span className="text-muted-foreground">Duration (min)</span><input type="number" value={aForm.duration_minutes} onChange={e => setAForm({ ...aForm, duration_minutes: e.target.value })} className="w-full mt-1 p-2.5 rounded-lg border bg-background text-sm" /></label>
               <label className="text-xs"><span className="text-muted-foreground">Passing marks</span><input type="number" value={aForm.passing_marks} onChange={e => setAForm({ ...aForm, passing_marks: e.target.value })} className="w-full mt-1 p-2.5 rounded-lg border bg-background text-sm" /></label>
             </div>
+            <label className="text-xs block">
+              <span className="text-muted-foreground">Recommended course (shown to students who score below passing)</span>
+              <select value={aForm.recommended_course_id || ''} onChange={e => setAForm({ ...aForm, recommended_course_id: e.target.value })} className="w-full mt-1 p-2.5 rounded-lg border bg-background text-sm">
+                <option value="">— None —</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </label>
             <button onClick={saveAssessment} className="w-full py-3 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">Save</button>
           </div>
         </Modal>
