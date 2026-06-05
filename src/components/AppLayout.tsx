@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/lib/app-context';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Home, BarChart3, User, Mic, Briefcase, GraduationCap, Menu, X, FlameIcon, Trophy, LogOut, ShieldCheck, Library, BookMarked, ClipboardCheck } from 'lucide-react';
+import { BookOpen, Home, BarChart3, User, Mic, Briefcase, GraduationCap, Menu, X, FlameIcon, Trophy, LogOut, ShieldCheck, Library, BookMarked, ClipboardCheck, Upload, Inbox } from 'lucide-react';
 
 const navItems = [
   { path: '/dashboard', label: 'Home', icon: Home },
   { path: '/courses', label: 'Courses', icon: Library },
   { path: '/assessments', label: 'Assessments', icon: ClipboardCheck },
+  { path: '/submissions', label: 'Submit', icon: Upload },
   { path: '/daily-practice', label: 'Daily', icon: BookOpen },
   { path: '/grammar', label: 'Grammar', icon: GraduationCap },
   { path: '/vocabulary', label: 'Vocab', icon: BookOpen },
