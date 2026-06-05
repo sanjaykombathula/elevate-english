@@ -6,12 +6,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, FileSpreadsheet, X, ArrowLeft, Loader2, ClipboardCheck, Eye, EyeOff, Users } from 'lucide-react';
 
-interface Assessment { id: string; title: string; description: string | null; duration_minutes: number; total_marks: number; passing_marks: number; published: boolean; created_at: string; }
+interface Assessment { id: string; title: string; description: string | null; duration_minutes: number; total_marks: number; passing_marks: number; published: boolean; created_at: string; recommended_course_id?: string | null; }
 interface Question { id: string; assessment_id: string; question_text: string; question_type: string; options: any; correct_answer: string; marks: number; order_index: number; }
 interface Attempt { id: string; user_id: string; score: number; total_marks: number; percentage: number; passed: boolean; submitted_at: string; }
+interface CourseOpt { id: string; title: string; }
 
-const emptyA = { title: '', description: '', duration_minutes: 30, passing_marks: 0 };
+const emptyA = { title: '', description: '', duration_minutes: 30, passing_marks: 0, recommended_course_id: '' };
 const emptyQ = { question_text: '', question_type: 'mcq', options: ['', '', '', ''], correct_answer: '', marks: 1, order_index: 0 };
+
 
 export default function AdminAssessmentsPage() {
   const { isAdmin } = useApp();
