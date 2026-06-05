@@ -324,7 +324,7 @@ export default function AdminAssessmentsPage() {
                   </div>
                   <div className="flex gap-1 mt-4 border-t pt-3">
                     <button onClick={() => setSelected(a)} className="flex-1 py-1.5 rounded-lg text-xs hover:bg-secondary">Manage</button>
-                    <button onClick={() => { setAForm({ title: a.title, description: a.description || '', duration_minutes: a.duration_minutes, passing_marks: a.passing_marks }); setAModal({ open: true, edit: a }); }} className="p-2 rounded-lg hover:bg-secondary"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => { setAForm({ title: a.title, description: a.description || '', duration_minutes: a.duration_minutes, passing_marks: a.passing_marks, recommended_course_id: a.recommended_course_id || '' }); setAModal({ open: true, edit: a }); }} className="p-2 rounded-lg hover:bg-secondary"><Pencil className="w-4 h-4" /></button>
                     <button onClick={() => deleteAssessment(a.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
