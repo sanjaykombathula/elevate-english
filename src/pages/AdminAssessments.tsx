@@ -6,12 +6,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, FileSpreadsheet, X, ArrowLeft, Loader2, ClipboardCheck, Eye, EyeOff, Users } from 'lucide-react';
 
-interface Assessment { id: string; title: string; description: string | null; duration_minutes: number; total_marks: number; passing_marks: number; published: boolean; created_at: string; }
+interface Assessment { id: string; title: string; description: string | null; duration_minutes: number; total_marks: number; passing_marks: number; published: boolean; created_at: string; recommended_course_id?: string | null; }
 interface Question { id: string; assessment_id: string; question_text: string; question_type: string; options: any; correct_answer: string; marks: number; order_index: number; }
 interface Attempt { id: string; user_id: string; score: number; total_marks: number; percentage: number; passed: boolean; submitted_at: string; }
+interface CourseOpt { id: string; title: string; }
 
-const emptyA = { title: '', description: '', duration_minutes: 30, passing_marks: 0 };
+const emptyA = { title: '', description: '', duration_minutes: 30, passing_marks: 0, recommended_course_id: '' };
 const emptyQ = { question_text: '', question_type: 'mcq', options: ['', '', '', ''], correct_answer: '', marks: 1, order_index: 0 };
+
 
 export default function AdminAssessmentsPage() {
   const { isAdmin } = useApp();
@@ -28,6 +30,7 @@ export default function AdminAssessmentsPage() {
 
   const [attemptsOpen, setAttemptsOpen] = useState(false);
   const [attempts, setAttempts] = useState<(Attempt & { name?: string; email?: string })[]>([]);
+  const [courses, setCourses] = useState<CourseOpt[]>([]);
 
   const load = async () => {
     setLoading(true);
@@ -36,6 +39,10 @@ export default function AdminAssessmentsPage() {
     setList((data as Assessment[]) || []);
     setLoading(false);
   };
+  const loadCourses = async () => {
+    const { data } = await supabase.from('courses').select('id,title').order('title');
+    setCourses((data as CourseOpt[]) || []);
+  };
   const loadQuestions = async (id: string) => {
     setQLoading(true);
     const { data, error } = await supabase.from('assessment_questions').select('*').eq('assessment_id', id).order('order_index');
@@ -43,8 +50,9 @@ export default function AdminAssessmentsPage() {
     setQuestions((data as Question[]) || []);
     setQLoading(false);
   };
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+  useEffect(() => { if (isAdmin) { load(); loadCourses(); } }, [isAdmin]);
   useEffect(() => { if (selected) loadQuestions(selected.id); }, [selected]);
+
 
   if (!isAdmin) return <AppLayout><div className="container py-12 text-center text-muted-foreground">Admins only.</div></AppLayout>;
 
@@ -56,7 +64,7 @@ export default function AdminAssessmentsPage() {
 
   const saveAssessment = async () => {
     if (!aForm.title.trim()) return toast.error('Title required');
-    const payload = { title: aForm.title.trim(), description: aForm.description || null, duration_minutes: Number(aForm.duration_minutes) || 30, passing_marks: Number(aForm.passing_marks) || 0 };
+    const payload: any = { title: aForm.title.trim(), description: aForm.description || null, duration_minutes: Number(aForm.duration_minutes) || 30, passing_marks: Number(aForm.passing_marks) || 0, recommended_course_id: aForm.recommended_course_id || null };
     if (aModal.edit) {
       const { error } = await supabase.from('assessments').update(payload).eq('id', aModal.edit.id);
       if (error) return toast.error(error.message);
@@ -68,6 +76,7 @@ export default function AdminAssessmentsPage() {
     }
     setAModal({ open: false }); setAForm({ ...emptyA }); load();
   };
+
 
   const deleteAssessment = async (id: string) => {
     if (!confirm('Delete this assessment? All questions and attempts will be removed.')) return;
@@ -315,7 +324,7 @@ export default function AdminAssessmentsPage() {
                   </div>
                   <div className="flex gap-1 mt-4 border-t pt-3">
                     <button onClick={() => setSelected(a)} className="flex-1 py-1.5 rounded-lg text-xs hover:bg-secondary">Manage</button>
-                    <button onClick={() => { setAForm({ title: a.title, description: a.description || '', duration_minutes: a.duration_minutes, passing_marks: a.passing_marks }); setAModal({ open: true, edit: a }); }} className="p-2 rounded-lg hover:bg-secondary"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => { setAForm({ title: a.title, description: a.description || '', duration_minutes: a.duration_minutes, passing_marks: a.passing_marks, recommended_course_id: a.recommended_course_id || '' }); setAModal({ open: true, edit: a }); }} className="p-2 rounded-lg hover:bg-secondary"><Pencil className="w-4 h-4" /></button>
                     <button onClick={() => deleteAssessment(a.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
@@ -332,6 +341,13 @@ export default function AdminAssessmentsPage() {
               <label className="text-xs"><span className="text-muted-foreground">Duration (min)</span><input type="number" value={aForm.duration_minutes} onChange={e => setAForm({ ...aForm, duration_minutes: e.target.value })} className="w-full mt-1 p-2.5 rounded-lg border bg-background text-sm" /></label>
               <label className="text-xs"><span className="text-muted-foreground">Passing marks</span><input type="number" value={aForm.passing_marks} onChange={e => setAForm({ ...aForm, passing_marks: e.target.value })} className="w-full mt-1 p-2.5 rounded-lg border bg-background text-sm" /></label>
             </div>
+            <label className="text-xs block">
+              <span className="text-muted-foreground">Recommended course (shown to students who score below passing)</span>
+              <select value={aForm.recommended_course_id || ''} onChange={e => setAForm({ ...aForm, recommended_course_id: e.target.value })} className="w-full mt-1 p-2.5 rounded-lg border bg-background text-sm">
+                <option value="">— None —</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </label>
             <button onClick={saveAssessment} className="w-full py-3 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">Save</button>
           </div>
         </Modal>

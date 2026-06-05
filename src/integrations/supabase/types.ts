@@ -114,6 +114,7 @@ export type Database = {
           id: string
           passing_marks: number
           published: boolean
+          recommended_course_id: string | null
           title: string
           total_marks: number
           updated_at: string
@@ -126,6 +127,7 @@ export type Database = {
           id?: string
           passing_marks?: number
           published?: boolean
+          recommended_course_id?: string | null
           title: string
           total_marks?: number
           updated_at?: string
@@ -138,11 +140,20 @@ export type Database = {
           id?: string
           passing_marks?: number
           published?: boolean
+          recommended_course_id?: string | null
           title?: string
           total_marks?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "assessments_recommended_course_id_fkey"
+            columns: ["recommended_course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       course_assignments: {
         Row: {

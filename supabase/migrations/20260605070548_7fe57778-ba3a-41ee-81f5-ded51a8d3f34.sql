@@ -1,0 +1,1 @@
+ALTER TABLE public.assessments ADD COLUMN IF NOT EXISTS recommended_course_id uuid REFERENCES public.courses(id) ON DELETE SET NULL;

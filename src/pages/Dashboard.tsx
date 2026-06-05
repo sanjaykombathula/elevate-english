@@ -6,6 +6,7 @@ import { StatCard, ProgressRing, ProgressBar } from '@/components/ui-components'
 import { FlameIcon, Trophy, BookOpen, Target, Mic, GraduationCap, Briefcase, Brain, ArrowRight, Sparkles, CheckCircle } from 'lucide-react';
 import { vocabWords } from '@/lib/dummy-data';
 import AppLayout from '@/components/AppLayout';
+import Recommendations from '@/components/Recommendations';
 
 const quickLinks = [
   { path: '/grammar', label: 'Grammar', icon: '📝', color: 'bg-emerald-50 border-emerald-200' },
@@ -86,6 +87,9 @@ export default function Dashboard() {
             <ProgressRing value={user.placementReadinessScore} label="Placement" color="hsl(var(--destructive))" />
           </div>
         </div>
+
+        {/* Recommendations based on assessment scores */}
+        <Recommendations />
 
         {/* Quick Start */}
         <div>
