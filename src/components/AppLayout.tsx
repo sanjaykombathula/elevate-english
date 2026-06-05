@@ -21,7 +21,7 @@ const navItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isAdmin } = useApp();
-  const allNav = isAdmin ? [...navItems, { path: '/admin', label: 'Admin', icon: ShieldCheck }, { path: '/admin/courses', label: 'LMS', icon: BookMarked }, { path: '/admin/assessments', label: 'Tests', icon: ClipboardCheck }] : navItems;
+  const allNav = isAdmin ? [...navItems, { path: '/admin', label: 'Admin', icon: ShieldCheck }, { path: '/admin/courses', label: 'LMS', icon: BookMarked }, { path: '/admin/assessments', label: 'Tests', icon: ClipboardCheck }, { path: '/admin/submissions', label: 'Reviews', icon: Inbox }] : navItems;
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
