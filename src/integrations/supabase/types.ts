@@ -417,6 +417,57 @@ export type Database = {
         }
         Relationships: []
       }
+      task_submissions: {
+        Row: {
+          admin_comments: string | null
+          created_at: string
+          description: string | null
+          file_name: string | null
+          file_url: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          score: number | null
+          status: string
+          submission_type: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_comments?: string | null
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_url: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score?: number | null
+          status?: string
+          submission_type: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_comments?: string | null
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score?: number | null
+          status?: string
+          submission_type?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
