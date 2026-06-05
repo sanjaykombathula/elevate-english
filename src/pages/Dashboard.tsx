@@ -88,6 +88,9 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Recommendations based on assessment scores */}
+        <Recommendations />
+
         {/* Quick Start */}
         <div>
           <h2 className="font-display text-lg font-bold mb-3">Quick Start</h2>
