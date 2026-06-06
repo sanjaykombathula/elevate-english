@@ -338,6 +338,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean
           badges: string[] | null
           branch: string | null
           college: string | null
@@ -358,12 +359,14 @@ export type Database = {
           placement_readiness_score: number | null
           speaking_score: number | null
           streak: number | null
+          student_id: string | null
           total_marks: number | null
           updated_at: string
           vocabulary_score: number | null
           year: string | null
         }
         Insert: {
+          active?: boolean
           badges?: string[] | null
           branch?: string | null
           college?: string | null
@@ -384,12 +387,14 @@ export type Database = {
           placement_readiness_score?: number | null
           speaking_score?: number | null
           streak?: number | null
+          student_id?: string | null
           total_marks?: number | null
           updated_at?: string
           vocabulary_score?: number | null
           year?: string | null
         }
         Update: {
+          active?: boolean
           badges?: string[] | null
           branch?: string | null
           college?: string | null
@@ -410,6 +415,7 @@ export type Database = {
           placement_readiness_score?: number | null
           speaking_score?: number | null
           streak?: number | null
+          student_id?: string | null
           total_marks?: number | null
           updated_at?: string
           vocabulary_score?: number | null

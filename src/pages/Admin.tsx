@@ -3,12 +3,16 @@ import AppLayout from '@/components/AppLayout';
 import { useApp } from '@/lib/app-context';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
-import { Users, UserPlus, Upload, Download, Trash2, Search, ShieldCheck, FileSpreadsheet, CheckCircle2, XCircle, Loader2, Pencil, X } from 'lucide-react';
+import {
+  Users, UserPlus, Upload, Download, Trash2, Search, ShieldCheck, FileSpreadsheet,
+  CheckCircle2, XCircle, Loader2, Pencil, X, KeyRound, Power, ChevronLeft, ChevronRight, Filter,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
 interface StudentRow {
   id: string;
+  student_id: string | null;
   name: string | null;
   email: string | null;
   phone: string | null;
@@ -17,6 +21,7 @@ interface StudentRow {
   year: string | null;
   branch: string | null;
   level: string | null;
+  active: boolean | null;
   total_marks: number | null;
   lessons_completed: number | null;
   created_at: string;
@@ -24,7 +29,8 @@ interface StudentRow {
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`;
 
-const emptyStudent = { name: '', email: '', password: '', phone: '', college: '', department: '', year: '', branch: '', level: 'Beginner' };
+const emptyStudent = { student_id: '', name: '', email: '', password: '', phone: '', college: '', department: '', year: '', branch: '', level: 'Beginner' };
+const PAGE_SIZE = 10;
 
 function randomPassword(len = 12) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$';
@@ -38,6 +44,11 @@ export default function AdminPage() {
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterCollege, setFilterCollege] = useState('');
+  const [filterDept, setFilterDept] = useState('');
+  const [filterYear, setFilterYear] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const [page, setPage] = useState(1);
   const [claiming, setClaiming] = useState(false);
 
   const [single, setSingle] = useState({ ...emptyStudent });
@@ -47,6 +58,10 @@ export default function AdminPage() {
   const [editForm, setEditForm] = useState<any>({});
   const [savingEdit, setSavingEdit] = useState(false);
 
+  const [resetting, setResetting] = useState<StudentRow | null>(null);
+  const [newPwd, setNewPwd] = useState('');
+  const [savingReset, setSavingReset] = useState(false);
+
   const [parsedRows, setParsedRows] = useState<any[]>([]);
   const [bulkResult, setBulkResult] = useState<any>(null);
   const [bulkRunning, setBulkRunning] = useState(false);
@@ -55,7 +70,7 @@ export default function AdminPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('id,name,email,phone,college,department,year,branch,level,total_marks,lessons_completed,created_at')
+      .select('id,student_id,name,email,phone,college,department,year,branch,level,active,total_marks,lessons_completed,created_at')
       .order('created_at', { ascending: false });
     if (error) toast.error(error.message);
     setStudents((data as StudentRow[]) || []);
@@ -63,6 +78,7 @@ export default function AdminPage() {
   };
 
   useEffect(() => { if (isAdmin) loadStudents(); }, [isAdmin]);
+  useEffect(() => { setPage(1); }, [search, filterCollege, filterDept, filterYear, filterStatus]);
 
   const callFn = async (payload: any) => {
     const res = await fetch(FN_URL, {
@@ -102,10 +118,9 @@ export default function AdminPage() {
   const openEdit = (s: StudentRow) => {
     setEditing(s);
     setEditForm({
-      name: s.name || '', email: s.email || '', phone: s.phone || '',
+      student_id: s.student_id || '', name: s.name || '', email: s.email || '', phone: s.phone || '',
       college: s.college || '', department: s.department || '',
       year: s.year || '', branch: s.branch || '', level: s.level || 'Beginner',
-      password: '',
     });
   };
 
@@ -113,9 +128,7 @@ export default function AdminPage() {
     if (!editing) return;
     setSavingEdit(true);
     try {
-      const payload: any = { ...editForm, id: editing.id };
-      if (!payload.password) delete payload.password;
-      const result = await callFn({ action: 'update', user: payload });
+      const result = await callFn({ action: 'update', user: { ...editForm, id: editing.id } });
       if (result?.ok) {
         toast.success('Student updated');
         setEditing(null);
@@ -126,15 +139,34 @@ export default function AdminPage() {
     } finally { setSavingEdit(false); }
   };
 
+  const submitReset = async () => {
+    if (!resetting || newPwd.length < 8) { toast.error('Password must be at least 8 characters'); return; }
+    setSavingReset(true);
+    try {
+      const result = await callFn({ action: 'reset_password', id: resetting.id, password: newPwd });
+      if (result?.ok) {
+        toast.success(`Password reset for ${resetting.email}`);
+        setResetting(null); setNewPwd('');
+      } else toast.error(result?.error || 'Reset failed');
+    } finally { setSavingReset(false); }
+  };
+
+  const toggleActive = async (s: StudentRow) => {
+    const next = !s.active;
+    const result = await callFn({ action: 'set_active', id: s.id, active: next });
+    if (result?.ok) {
+      toast.success(next ? 'Activated' : 'Deactivated');
+      setStudents((prev) => prev.map((x) => x.id === s.id ? { ...x, active: next } : x));
+    } else toast.error(result?.error || 'Failed');
+  };
+
   const deleteStudent = async (s: StudentRow) => {
     if (!confirm(`Delete ${s.email}? This cannot be undone.`)) return;
     const result = await callFn({ action: 'delete', id: s.id });
     if (result?.ok) {
       toast.success('Student deleted');
       setStudents((prev) => prev.filter((x) => x.id !== s.id));
-    } else {
-      toast.error(result?.error || 'Delete failed');
-    }
+    } else toast.error(result?.error || 'Delete failed');
   };
 
   const handleFile = async (file: File) => {
@@ -144,6 +176,7 @@ export default function AdminPage() {
       const sheet = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json<any>(sheet, { defval: '' });
       const normalized = rows.map((r) => ({
+        student_id: String(r.student_id || r.StudentID || r['Student ID'] || '').trim(),
         email: String(r.email || r.Email || '').trim(),
         password: String(r.password || r.Password || '').trim() || randomPassword(),
         name: String(r.name || r.Name || '').trim(),
@@ -177,25 +210,52 @@ export default function AdminPage() {
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([
-      { name: 'Aarav Kumar', email: 'aarav@example.com', password: 'TempPass123', phone: '9876543210', college: 'JNTU Hyderabad', department: 'Computer Science', year: '3rd', branch: 'CSE', level: 'Intermediate' },
-      { name: 'Priya Sharma', email: 'priya@example.com', password: '', phone: '', college: 'IIT Bombay', department: 'Electronics', year: '2nd', branch: 'ECE', level: 'Beginner' },
+      { student_id: 'MP2026001', name: 'Aarav Kumar', email: 'aarav@example.com', password: 'TempPass123', phone: '9876543210', college: 'JNTU Hyderabad', department: 'Computer Science', year: '3rd', branch: 'CSE', level: 'Intermediate' },
+      { student_id: 'MP2026002', name: 'Priya Sharma', email: 'priya@example.com', password: '', phone: '', college: 'IIT Bombay', department: 'Electronics', year: '2nd', branch: 'ECE', level: 'Beginner' },
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Students');
     XLSX.writeFile(wb, 'mentorsplace-students-template.xlsx');
   };
 
+  const exportStudents = () => {
+    const ws = XLSX.utils.json_to_sheet(students.map((s) => ({
+      student_id: s.student_id, name: s.name, email: s.email, phone: s.phone,
+      college: s.college, department: s.department, year: s.year, level: s.level,
+      active: s.active, total_marks: s.total_marks, lessons_completed: s.lessons_completed,
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Students');
+    XLSX.writeFile(wb, `students-export-${Date.now()}.xlsx`);
+  };
+
+  const colleges = useMemo(() => Array.from(new Set(students.map((s) => s.college).filter(Boolean))) as string[], [students]);
+  const depts = useMemo(() => Array.from(new Set(students.map((s) => s.department).filter(Boolean))) as string[], [students]);
+  const years = useMemo(() => Array.from(new Set(students.map((s) => s.year).filter(Boolean))) as string[], [students]);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return students;
-    return students.filter((s) =>
-      (s.name || '').toLowerCase().includes(q) ||
-      (s.email || '').toLowerCase().includes(q) ||
-      (s.college || '').toLowerCase().includes(q) ||
-      (s.department || '').toLowerCase().includes(q) ||
-      (s.phone || '').toLowerCase().includes(q),
-    );
-  }, [students, search]);
+    return students.filter((s) => {
+      if (q) {
+        const hit = (s.name || '').toLowerCase().includes(q)
+          || (s.email || '').toLowerCase().includes(q)
+          || (s.student_id || '').toLowerCase().includes(q)
+          || (s.college || '').toLowerCase().includes(q)
+          || (s.department || '').toLowerCase().includes(q)
+          || (s.phone || '').toLowerCase().includes(q);
+        if (!hit) return false;
+      }
+      if (filterCollege && s.college !== filterCollege) return false;
+      if (filterDept && s.department !== filterDept) return false;
+      if (filterYear && s.year !== filterYear) return false;
+      if (filterStatus === 'active' && !s.active) return false;
+      if (filterStatus === 'inactive' && s.active) return false;
+      return true;
+    });
+  }, [students, search, filterCollege, filterDept, filterYear, filterStatus]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (!isAdmin) {
     return (
@@ -227,10 +287,13 @@ export default function AdminPage() {
             <h1 className="font-display text-3xl font-bold flex items-center gap-2">
               <Users className="w-7 h-7 text-primary" /> Student Management
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">Add, edit, delete, or bulk-import student accounts.</p>
+            <p className="text-sm text-muted-foreground mt-1">Add, edit, delete, activate, or bulk-import student accounts.</p>
           </div>
-          <div className="text-sm text-muted-foreground tabular-nums">
-            <span className="font-semibold text-foreground">{students.length}</span> students
+          <div className="flex items-center gap-3 text-sm text-muted-foreground tabular-nums">
+            <span><span className="font-semibold text-foreground">{students.length}</span> total</span>
+            <button onClick={exportStudents} className="text-xs px-3 py-1.5 rounded-lg border hover:bg-secondary flex items-center gap-1">
+              <Download className="w-3.5 h-3.5" /> Export
+            </button>
           </div>
         </div>
 
@@ -243,17 +306,19 @@ export default function AdminPage() {
             </div>
             <form onSubmit={handleSingleCreate} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
+                <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Student ID"
+                  value={single.student_id} onChange={e => setSingle({ ...single, student_id: e.target.value })} />
                 <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Full name"
                   value={single.name} onChange={e => setSingle({ ...single, name: e.target.value })} />
                 <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Email *" type="email" required
                   value={single.email} onChange={e => setSingle({ ...single, email: e.target.value })} />
                 <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Phone"
                   value={single.phone} onChange={e => setSingle({ ...single, phone: e.target.value })} />
-                <div className="relative">
+                <div className="relative col-span-2">
                   <input className="w-full px-3 py-2 rounded-lg border bg-background text-sm pr-20" placeholder="Password (min 8) *"
                     value={single.password} onChange={e => setSingle({ ...single, password: e.target.value })} />
                   <button type="button" onClick={() => setSingle({ ...single, password: randomPassword() })}
-                    className="absolute right-1 top-1 px-2 py-1 text-xs rounded-md bg-secondary hover:bg-secondary/70">Gen</button>
+                    className="absolute right-1 top-1 px-2 py-1 text-xs rounded-md bg-secondary hover:bg-secondary/70">Generate</button>
                 </div>
                 <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="College"
                   value={single.college} onChange={e => setSingle({ ...single, college: e.target.value })} />
@@ -287,7 +352,7 @@ export default function AdminPage() {
             <label className="block border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/30 transition">
               <Upload className="w-6 h-6 mx-auto text-muted-foreground" />
               <p className="text-sm font-medium mt-2">Drop .xlsx or .csv here</p>
-              <p className="text-xs text-muted-foreground mt-0.5">name, email, password, phone, college, department, year, branch, level</p>
+              <p className="text-xs text-muted-foreground mt-0.5">student_id, name, email, password, phone, college, department, year, level</p>
               <input type="file" accept=".xlsx,.xls,.csv" className="hidden"
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
             </label>
@@ -323,49 +388,90 @@ export default function AdminPage() {
 
         {/* Students list */}
         <div className="bg-card rounded-2xl card-shadow overflow-hidden">
-          <div className="p-4 border-b flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-              <input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Search by name, email, phone, college, department..."
-                className="w-full pl-10 pr-3 py-2 rounded-lg border bg-background text-sm" />
+          <div className="p-4 border-b space-y-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                <input value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="Search by ID, name, email, phone, college, department..."
+                  className="w-full pl-10 pr-3 py-2 rounded-lg border bg-background text-sm" />
+              </div>
+              <button onClick={loadStudents} className="text-xs px-3 py-2 rounded-lg border hover:bg-secondary">Refresh</button>
             </div>
-            <button onClick={loadStudents} className="text-xs px-3 py-2 rounded-lg border hover:bg-secondary">Refresh</button>
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+              <select value={filterCollege} onChange={e => setFilterCollege(e.target.value)} className="px-2 py-1.5 rounded-lg border bg-background">
+                <option value="">All colleges</option>
+                {colleges.map((c) => <option key={c}>{c}</option>)}
+              </select>
+              <select value={filterDept} onChange={e => setFilterDept(e.target.value)} className="px-2 py-1.5 rounded-lg border bg-background">
+                <option value="">All departments</option>
+                {depts.map((c) => <option key={c}>{c}</option>)}
+              </select>
+              <select value={filterYear} onChange={e => setFilterYear(e.target.value)} className="px-2 py-1.5 rounded-lg border bg-background">
+                <option value="">All years</option>
+                {years.map((c) => <option key={c}>{c}</option>)}
+              </select>
+              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as any)} className="px-2 py-1.5 rounded-lg border bg-background">
+                <option value="all">All status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              {(filterCollege || filterDept || filterYear || filterStatus !== 'all' || search) && (
+                <button onClick={() => { setSearch(''); setFilterCollege(''); setFilterDept(''); setFilterYear(''); setFilterStatus('all'); }}
+                  className="px-2 py-1.5 rounded-lg hover:bg-secondary text-muted-foreground">Clear</button>
+              )}
+              <span className="ml-auto tabular-nums text-muted-foreground">{filtered.length} of {students.length}</span>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-secondary/50 text-xs uppercase text-muted-foreground">
                 <tr>
+                  <th className="text-left px-4 py-3">Student ID</th>
                   <th className="text-left px-4 py-3">Name</th>
                   <th className="text-left px-4 py-3">Email</th>
                   <th className="text-left px-4 py-3">Phone</th>
                   <th className="text-left px-4 py-3">College</th>
-                  <th className="text-left px-4 py-3">Department</th>
+                  <th className="text-left px-4 py-3">Dept</th>
                   <th className="text-left px-4 py-3">Year</th>
-                  <th className="text-right px-4 py-3">Marks</th>
-                  <th className="text-right px-4 py-3 w-24">Actions</th>
+                  <th className="text-left px-4 py-3">Status</th>
+                  <th className="text-right px-4 py-3 w-40">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {loading && <tr><td colSpan={8} className="py-10 text-center text-muted-foreground">Loading...</td></tr>}
-                {!loading && filtered.length === 0 && (
-                  <tr><td colSpan={8} className="py-10 text-center text-muted-foreground">No students yet. Add one above.</td></tr>
+                {loading && <tr><td colSpan={9} className="py-10 text-center text-muted-foreground">Loading...</td></tr>}
+                {!loading && pageRows.length === 0 && (
+                  <tr><td colSpan={9} className="py-10 text-center text-muted-foreground">No students match.</td></tr>
                 )}
-                {filtered.map((s) => (
+                {pageRows.map((s) => (
                   <tr key={s.id} className="border-t hover:bg-secondary/30">
+                    <td className="px-4 py-3 font-mono text-xs">{s.student_id || '—'}</td>
                     <td className="px-4 py-3 font-medium">{s.name || '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground">{s.email}</td>
                     <td className="px-4 py-3 text-muted-foreground tabular-nums">{s.phone || '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground">{s.college || '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground">{s.department || '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground">{s.year || '—'}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{s.total_marks ?? 0}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.active ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'}`}>
+                        {s.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => openEdit(s)} title="Edit"
                           className="p-1.5 rounded-md hover:bg-primary/10 text-primary transition">
                           <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => { setResetting(s); setNewPwd(randomPassword()); }} title="Reset password"
+                          className="p-1.5 rounded-md hover:bg-primary/10 text-primary transition">
+                          <KeyRound className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => toggleActive(s)} title={s.active ? 'Deactivate' : 'Activate'}
+                          className={`p-1.5 rounded-md transition ${s.active ? 'hover:bg-destructive/10 text-destructive' : 'hover:bg-success/10 text-success'}`}>
+                          <Power className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => deleteStudent(s)} title="Delete"
                           className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive transition">
@@ -378,6 +484,18 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+
+          {filtered.length > 0 && (
+            <div className="p-3 border-t flex items-center justify-between text-xs text-muted-foreground">
+              <span>Page <span className="tabular-nums font-semibold text-foreground">{page}</span> of {totalPages}</span>
+              <div className="flex items-center gap-1">
+                <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="p-1.5 rounded-md border hover:bg-secondary disabled:opacity-40"><ChevronLeft className="w-4 h-4" /></button>
+                <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  className="p-1.5 rounded-md border hover:bg-secondary disabled:opacity-40"><ChevronRight className="w-4 h-4" /></button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -395,18 +513,14 @@ export default function AdminPage() {
               </button>
             </div>
             <div className="grid grid-cols-2 gap-3">
+              <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Student ID"
+                value={editForm.student_id} onChange={e => setEditForm({ ...editForm, student_id: e.target.value })} />
               <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Name"
                 value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
               <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Email" type="email"
                 value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
               <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Phone"
                 value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
-              <div className="relative">
-                <input className="w-full px-3 py-2 rounded-lg border bg-background text-sm pr-20" placeholder="New password (optional)"
-                  value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} />
-                <button type="button" onClick={() => setEditForm({ ...editForm, password: randomPassword() })}
-                  className="absolute right-1 top-1 px-2 py-1 text-xs rounded-md bg-secondary hover:bg-secondary/70">Gen</button>
-              </div>
               <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="College"
                 value={editForm.college} onChange={e => setEditForm({ ...editForm, college: e.target.value })} />
               <input className="px-3 py-2 rounded-lg border bg-background text-sm" placeholder="Department"
@@ -425,6 +539,39 @@ export default function AdminPage() {
                 className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2">
                 {savingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
                 Save changes
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Reset password modal */}
+      {resetting && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => !savingReset && setResetting(null)}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            className="bg-card rounded-2xl p-6 max-w-md w-full card-shadow" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-xl font-bold flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-primary" /> Reset password
+              </h2>
+              <button onClick={() => setResetting(null)} className="p-1 rounded-md hover:bg-secondary">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">Setting a new password for <span className="font-semibold text-foreground">{resetting.email}</span>. Share it with the student securely.</p>
+            <div className="relative">
+              <input className="w-full px-3 py-2 rounded-lg border bg-background text-sm pr-20 font-mono"
+                value={newPwd} onChange={e => setNewPwd(e.target.value)} />
+              <button type="button" onClick={() => setNewPwd(randomPassword())}
+                className="absolute right-1 top-1 px-2 py-1 text-xs rounded-md bg-secondary hover:bg-secondary/70">Generate</button>
+            </div>
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => setResetting(null)} disabled={savingReset}
+                className="flex-1 py-2.5 rounded-xl border text-sm font-semibold hover:bg-secondary transition">Cancel</button>
+              <button onClick={submitReset} disabled={savingReset || newPwd.length < 8}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2">
+                {savingReset && <Loader2 className="w-4 h-4 animate-spin" />}
+                Reset password
               </button>
             </div>
           </motion.div>
