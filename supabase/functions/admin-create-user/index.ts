@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       }
 
       const profilePatch: Record<string, unknown> = {};
-      for (const k of ["name", "phone", "college", "department", "year", "branch", "level"] as const) {
+      for (const k of PROFILE_FIELDS) {
         if (u[k] !== undefined) profilePatch[k] = u[k];
       }
       if (u.email) profilePatch.email = u.email;
@@ -105,6 +105,32 @@ Deno.serve(async (req) => {
         const { error } = await admin.from("profiles").update(profilePatch).eq("id", u.id);
         if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== RESET PASSWORD =====
+    if (action === "reset_password") {
+      const id: string = body?.id;
+      const password: string = body?.password;
+      if (!id || !password) return new Response(JSON.stringify({ error: "id and password required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (String(password).length < 8) return new Response(JSON.stringify({ error: "password must be at least 8 characters" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const { error } = await admin.auth.admin.updateUserById(id, { password });
+      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== SET ACTIVE =====
+    if (action === "set_active") {
+      const id: string = body?.id;
+      const active: boolean = !!body?.active;
+      if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const { error: pErr } = await admin.from("profiles").update({ active }).eq("id", id);
+      if (pErr) return new Response(JSON.stringify({ error: pErr.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Ban (deactivate) or unban via banned_until
+      const banPatch = active ? { ban_duration: "none" as const } : { ban_duration: "876000h" as const };
+      // @ts-ignore - banned_until/ban_duration supported by GoTrue admin API
+      const { error: aErr } = await admin.auth.admin.updateUserById(id, banPatch as any);
+      if (aErr) return new Response(JSON.stringify({ error: aErr.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -135,7 +161,7 @@ Deno.serve(async (req) => {
       }
 
       const profileUpdate: Record<string, unknown> = {};
-      for (const k of ["name", "phone", "college", "department", "year", "branch", "level", "goal", "daily_target"] as const) {
+      for (const k of ["name","phone","college","department","year","branch","level","goal","daily_target","student_id"] as const) {
         if ((u as any)[k]) profileUpdate[k] = (u as any)[k];
       }
       if (Object.keys(profileUpdate).length) {
