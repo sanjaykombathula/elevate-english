@@ -21,6 +21,7 @@ import AdminAssessmentsPage from "./pages/AdminAssessments";
 import AssessmentsPage from "./pages/Assessments";
 import SubmissionsPage from "./pages/Submissions";
 import AdminSubmissionsPage from "./pages/AdminSubmissions";
+import ReportPage from "./pages/Report";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ function AppRoutes() {
       <Route path="/courses" element={<Protected><CoursesPage /></Protected>} />
       <Route path="/assessments" element={<Protected><AssessmentsPage /></Protected>} />
       <Route path="/submissions" element={<Protected><SubmissionsPage /></Protected>} />
+      <Route path="/report" element={<Protected><ReportPage /></Protected>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
