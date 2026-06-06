@@ -18,6 +18,7 @@ interface NewUser {
   level?: string;
   goal?: string;
   daily_target?: number;
+  student_id?: string;
 }
 
 interface UpdateUser {
@@ -31,7 +32,11 @@ interface UpdateUser {
   year?: string;
   branch?: string;
   level?: string;
+  student_id?: string;
+  active?: boolean;
 }
+
+const PROFILE_FIELDS = ["name","phone","college","department","year","branch","level","student_id","active"] as const;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
