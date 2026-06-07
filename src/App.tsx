@@ -21,6 +21,7 @@ import AdminAssessmentsPage from "./pages/AdminAssessments";
 import AssessmentsPage from "./pages/Assessments";
 import SubmissionsPage from "./pages/Submissions";
 import AdminSubmissionsPage from "./pages/AdminSubmissions";
+import AdminDashboardPage from "./pages/AdminDashboard";
 import ReportPage from "./pages/Report";
 import NotFound from "./pages/NotFound";
 
