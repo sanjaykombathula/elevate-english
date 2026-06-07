@@ -21,6 +21,7 @@ import AdminAssessmentsPage from "./pages/AdminAssessments";
 import AssessmentsPage from "./pages/Assessments";
 import SubmissionsPage from "./pages/Submissions";
 import AdminSubmissionsPage from "./pages/AdminSubmissions";
+import AdminDashboardPage from "./pages/AdminDashboard";
 import ReportPage from "./pages/Report";
 import NotFound from "./pages/NotFound";
 
@@ -58,6 +59,7 @@ function AppRoutes() {
       <Route path="/admin/courses" element={<Protected requireOnboarding={false}><AdminCoursesPage /></Protected>} />
       <Route path="/admin/assessments" element={<Protected requireOnboarding={false}><AdminAssessmentsPage /></Protected>} />
       <Route path="/admin/submissions" element={<Protected requireOnboarding={false}><AdminSubmissionsPage /></Protected>} />
+      <Route path="/admin/dashboard" element={<Protected requireOnboarding={false}><AdminDashboardPage /></Protected>} />
       <Route path="/courses" element={<Protected><CoursesPage /></Protected>} />
       <Route path="/assessments" element={<Protected><AssessmentsPage /></Protected>} />
       <Route path="/submissions" element={<Protected><SubmissionsPage /></Protected>} />
