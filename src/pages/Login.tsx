@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/lib/app-context';
 import { motion } from 'framer-motion';
-import { GraduationCap, Eye, EyeOff, Mail, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
+import { GraduationCap, Eye, EyeOff, Mail, Lock, User as UserIcon, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { BRAND } from '@/lib/brand';
+import { BrandMark } from '@/components/BrandMark';
 
 export default function LoginPage() {
   const navigate = useNavigate();
