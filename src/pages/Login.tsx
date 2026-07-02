@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/lib/app-context';
 import { motion } from 'framer-motion';
-import { GraduationCap, Eye, EyeOff, Mail, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
+import { GraduationCap, Eye, EyeOff, Mail, Lock, User as UserIcon, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { BRAND } from '@/lib/brand';
+import { BrandMark } from '@/components/BrandMark';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -46,34 +48,38 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <div className="hidden lg:flex flex-1 bg-primary items-center justify-center p-12">
-        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} className="max-w-md">
-          <div className="w-16 h-16 rounded-2xl bg-primary-foreground/10 flex items-center justify-center mb-8">
-            <GraduationCap className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <h1 className="font-display text-4xl font-extrabold text-primary-foreground leading-tight text-balance">
-            Your technical skills got you the interview.
+      <div className="hidden lg:flex flex-1 bg-brand-gradient items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_30%_20%,white_0%,transparent_45%)]" />
+        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} className="max-w-md relative text-white">
+          <BrandMark size="lg" />
+          <h1 className="font-display text-4xl font-extrabold leading-tight text-balance mt-10">
+            {BRAND.tagline}
           </h1>
-          <p className="text-primary-foreground/70 text-lg mt-4">
-            We'll get you the job. Master English communication for placements.
+          <p className="text-white/80 text-lg mt-4">
+            Communication, vocabulary, interviews and professional English — built for B.Tech students who want to be job-ready.
           </p>
+          <ul className="mt-8 space-y-3 text-sm">
+            {['4 immersive modules · 12 tasks', 'XP, streaks and certificates', 'Live leaderboard across your campus'].map((f) => (
+              <li key={f} className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent" /> {f}</li>
+            ))}
+          </ul>
         </motion.div>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold text-xl">MentorsPlace</span>
+            <BrandMark />
           </div>
 
-          <h2 className="font-display text-2xl font-bold">
-            {mode === 'login' ? 'Welcome Back' : 'Create Your Account'}
+          <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-widest">
+            <Sparkles className="w-3.5 h-3.5" /> {BRAND.name}
+          </div>
+          <h2 className="font-display text-2xl font-bold mt-1">
+            {mode === 'login' ? 'Welcome back' : 'Create your account'}
           </h2>
           <p className="text-muted-foreground text-sm mt-1 mb-6">
-            {mode === 'login' ? 'Sign in to continue your learning journey.' : 'Free to join. Start practicing in minutes.'}
+            {mode === 'login' ? 'Sign in to continue learning.' : 'Free to join. Start practicing in minutes.'}
           </p>
 
           <button
