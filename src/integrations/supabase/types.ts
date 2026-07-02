@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          published: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assessment_attempts: {
         Row: {
           answers: Json
@@ -151,6 +181,77 @@ export type Database = {
             columns: ["recommended_course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      badges: {
+        Row: {
+          code: string
+          created_at: string
+          criteria: Json
+          description: string | null
+          icon: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          criteria?: Json
+          description?: string | null
+          icon?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          criteria?: Json
+          description?: string | null
+          icon?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      certificates: {
+        Row: {
+          cert_number: string
+          id: string
+          issued_at: string
+          module_id: string
+          module_title: string
+          score: number | null
+          student_name: string
+          user_id: string
+        }
+        Insert: {
+          cert_number: string
+          id?: string
+          issued_at?: string
+          module_id: string
+          module_title: string
+          score?: number | null
+          student_name: string
+          user_id: string
+        }
+        Update: {
+          cert_number?: string
+          id?: string
+          issued_at?: string
+          module_id?: string
+          module_title?: string
+          score?: number | null
+          student_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
             referencedColumns: ["id"]
           },
         ]
@@ -336,6 +437,116 @@ export type Database = {
           },
         ]
       }
+      module_tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          module_id: string
+          sort_order: number
+          task_type: string
+          time_limit_seconds: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          module_id: string
+          sort_order?: number
+          task_type?: string
+          time_limit_seconds?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          module_id?: string
+          sort_order?: number
+          task_type?: string
+          time_limit_seconds?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_tasks_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          published: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          published?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          published?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active: boolean
@@ -423,6 +634,118 @@ export type Database = {
         }
         Relationships: []
       }
+      task_attempts: {
+        Row: {
+          answers: Json
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          percentage: number
+          score: number
+          started_at: string
+          task_id: string
+          time_spent_seconds: number
+          total_marks: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          percentage?: number
+          score?: number
+          started_at?: string
+          task_id: string
+          time_spent_seconds?: number
+          total_marks?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          percentage?: number
+          score?: number
+          started_at?: string
+          task_id?: string
+          time_spent_seconds?: number
+          total_marks?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_attempts_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "module_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_questions: {
+        Row: {
+          correct: Json
+          created_at: string
+          difficulty: string
+          explanation: string | null
+          id: string
+          marks: number
+          media_url: string | null
+          payload: Json
+          prompt: string
+          qtype: string
+          sort_order: number
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          correct?: Json
+          created_at?: string
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          marks?: number
+          media_url?: string | null
+          payload?: Json
+          prompt: string
+          qtype: string
+          sort_order?: number
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          correct?: Json
+          created_at?: string
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          marks?: number
+          media_url?: string | null
+          payload?: Json
+          prompt?: string
+          qtype?: string
+          sort_order?: number
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_questions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "module_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_submissions: {
         Row: {
           admin_comments: string | null
@@ -504,6 +827,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -522,6 +874,33 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          last_active_date: string | null
+          streak_best: number
+          streak_current: number
+          updated_at: string
+          user_id: string
+          xp_total: number
+        }
+        Insert: {
+          last_active_date?: string | null
+          streak_best?: number
+          streak_current?: number
+          updated_at?: string
+          user_id: string
+          xp_total?: number
+        }
+        Update: {
+          last_active_date?: string | null
+          streak_best?: number
+          streak_current?: number
+          updated_at?: string
+          user_id?: string
+          xp_total?: number
         }
         Relationships: []
       }
@@ -552,11 +931,42 @@ export type Database = {
         }
         Relationships: []
       }
+      xp_events: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          meta: Json
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          meta?: Json
+          source: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          meta?: Json
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      award_xp: {
+        Args: { _amount: number; _meta?: Json; _source: string }
+        Returns: undefined
+      }
       claim_admin_if_none: { Args: never; Returns: boolean }
       has_role: {
         Args: {
@@ -564,6 +974,25 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      issue_certificate: {
+        Args: { _module_id: string }
+        Returns: {
+          cert_number: string
+          id: string
+          issued_at: string
+          module_id: string
+          module_title: string
+          score: number | null
+          student_name: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "certificates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       submit_assessment: {
         Args: { _answers: Json; _assessment_id: string }
