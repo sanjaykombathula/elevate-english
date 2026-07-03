@@ -1,12 +1,13 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AppProvider, useApp } from "@/lib/app-context";
+import { AppProvider } from "@/lib/app-context";
 import { ThemeProvider } from "@/lib/theme";
 import LoginPage from "./pages/Login";
 import OnboardingPage from "./pages/Onboarding";
+import Landing from "./pages/Landing";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ModulesPage = lazy(() => import("./pages/Modules"));
@@ -31,25 +32,17 @@ const Loader = () => (
   <div className="min-h-screen-safe flex items-center justify-center text-muted-foreground text-sm">Loading…</div>
 );
 
-function Protected({ children, requireOnboarding = true }: { children: JSX.Element; requireOnboarding?: boolean }) {
-  const { isAuthenticated, onboardingComplete, loading } = useApp();
-  if (loading) return <Loader />;
-  if (!isAuthenticated) return <Navigate to="/" replace />;
-  if (requireOnboarding && !onboardingComplete) return <Navigate to="/onboarding" replace />;
+// Dev mode: authentication disabled. Protected is a pass-through.
+function Protected({ children }: { children: JSX.Element; requireOnboarding?: boolean }) {
   return children;
 }
 
 function AppRoutes() {
-  const { isAuthenticated, onboardingComplete, loading } = useApp();
   return (
     <Suspense fallback={<Loader />}>
       <Routes>
-        <Route path="/" element={
-          loading ? <Loader />
-          : !isAuthenticated ? <LoginPage />
-          : !onboardingComplete ? <Navigate to="/onboarding" />
-          : <Navigate to="/dashboard" />
-        } />
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/verify/:certNo" element={<Verify />} />
         <Route path="/onboarding" element={<Protected requireOnboarding={false}><OnboardingPage /></Protected>} />
         <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
