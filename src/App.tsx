@@ -7,6 +7,7 @@ import { AppProvider, useApp } from "@/lib/app-context";
 import { ThemeProvider } from "@/lib/theme";
 import LoginPage from "./pages/Login";
 import OnboardingPage from "./pages/Onboarding";
+import Landing from "./pages/Landing";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ModulesPage = lazy(() => import("./pages/Modules"));
