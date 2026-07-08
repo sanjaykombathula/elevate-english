@@ -24,6 +24,8 @@ const AdminDashboardPage = lazy(() => import("./pages/AdminDashboard"));
 const AdminQuestions = lazy(() => import("./pages/AdminQuestions"));
 const AdminAnnouncements = lazy(() => import("./pages/AdminAnnouncements"));
 const AdminImportPage = lazy(() => import("./pages/AdminImport"));
+const AdminCoursesPage = lazy(() => import("./pages/AdminCourses"));
+const CoursesPage = lazy(() => import("./pages/Courses"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -48,6 +50,8 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
         <Route path="/modules" element={<Protected><ModulesPage /></Protected>} />
         <Route path="/modules/:id" element={<Protected><ModuleDetail /></Protected>} />
+        <Route path="/courses" element={<Protected><CoursesPage /></Protected>} />
+        <Route path="/admin/courses" element={<Protected requireOnboarding={false}><AdminCoursesPage /></Protected>} />
         <Route path="/tasks/:taskId" element={<Protected><TaskPlayer /></Protected>} />
         <Route path="/leaderboard" element={<Protected><Leaderboard /></Protected>} />
         <Route path="/certificates" element={<Protected><Certificates /></Protected>} />

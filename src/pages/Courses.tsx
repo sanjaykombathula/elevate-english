@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { BookOpen, Video, FileText, Link2, ArrowLeft, Loader2, PlayCircle } from 'lucide-react';
+import { BookOpen, Video, FileText, Link2, ArrowLeft, Loader2, PlayCircle, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Course { id: string; title: string; description: string | null; cover_url: string | null; }
-interface Lesson { id: string; course_id: string; title: string; description: string | null; video_url: string | null; pdf_url: string | null; external_url: string | null; order_index: number; }
+interface Module { id: string; course_id: string; title: string; description: string | null; order_index: number; }
+interface Lesson { id: string; course_id: string; module_id: string | null; title: string; description: string | null; video_url: string | null; pdf_url: string | null; external_url: string | null; order_index: number; }
 
 function getYouTubeEmbed(url: string) {
   try {
@@ -23,6 +24,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Course | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
 
@@ -37,15 +39,30 @@ export default function CoursesPage() {
   }, []);
 
   useEffect(() => {
-    if (!selected) { setLessons([]); setActiveLesson(null); return; }
+    if (!selected) { setModules([]); setLessons([]); setActiveLesson(null); return; }
     (async () => {
-      const { data, error } = await supabase.from('lessons').select('*').eq('course_id', selected.id).order('order_index');
-      if (error) toast.error(error.message);
-      const list = (data as Lesson[]) || [];
-      setLessons(list);
-      setActiveLesson(list[0] || null);
+      const [{ data: mods, error: me }, { data: lsns, error: le }] = await Promise.all([
+        supabase.from('course_modules').select('*').eq('course_id', selected.id).order('order_index'),
+        supabase.from('lessons').select('*').eq('course_id', selected.id).order('order_index'),
+      ]);
+      if (me) toast.error(me.message);
+      if (le) toast.error(le.message);
+      const modList = (mods as Module[]) || [];
+      const lsnList = (lsns as Lesson[]) || [];
+      setModules(modList);
+      setLessons(lsnList);
+      setActiveLesson(lsnList[0] || null);
     })();
   }, [selected]);
+
+  const grouped = useMemo(() => {
+    const groups: { module: Module | null; lessons: Lesson[] }[] = modules.map(m => ({
+      module: m, lessons: lessons.filter(l => l.module_id === m.id),
+    }));
+    const unassigned = lessons.filter(l => !l.module_id);
+    if (unassigned.length) groups.push({ module: null, lessons: unassigned });
+    return groups;
+  }, [modules, lessons]);
 
   if (selected) {
     const ytEmbed = activeLesson?.video_url ? getYouTubeEmbed(activeLesson.video_url) : null;
@@ -61,7 +78,7 @@ export default function CoursesPage() {
           {lessons.length === 0 ? (
             <div className="text-center py-16 border rounded-xl bg-card text-muted-foreground">No lessons available yet.</div>
           ) : (
-            <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+            <div className="grid lg:grid-cols-[1fr_340px] gap-6">
               <div className="space-y-4">
                 {activeLesson && (
                   <div className="border rounded-xl bg-card overflow-hidden">
@@ -86,26 +103,37 @@ export default function CoursesPage() {
                   </div>
                 )}
               </div>
-              <aside className="border rounded-xl bg-card p-3 h-fit lg:sticky lg:top-20">
-                <div className="text-xs font-semibold text-muted-foreground uppercase px-2 py-2">Lessons ({lessons.length})</div>
-                <div className="space-y-1 max-h-[60vh] overflow-y-auto">
-                  {lessons.map((l, i) => {
-                    const active = activeLesson?.id === l.id;
-                    return (
-                      <button key={l.id} onClick={() => setActiveLesson(l)}
-                        className={`w-full text-left flex items-start gap-3 p-2.5 rounded-lg transition-colors ${active ? 'bg-primary/10 text-primary' : 'hover:bg-secondary'}`}>
-                        <div className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-semibold flex-shrink-0 ${active ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>{i + 1}</div>
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">{l.title}</div>
-                          <div className="flex gap-1 mt-0.5 text-muted-foreground">
-                            {l.video_url && <Video className="w-3 h-3" />}
-                            {l.pdf_url && <FileText className="w-3 h-3" />}
-                            {l.external_url && <Link2 className="w-3 h-3" />}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+              <aside className="border rounded-xl bg-card p-3 h-fit lg:sticky lg:top-20 max-h-[80vh] overflow-y-auto">
+                <div className="text-xs font-semibold text-muted-foreground uppercase px-2 py-2">Course content</div>
+                <div className="space-y-3">
+                  {grouped.map((g, gi) => (
+                    <div key={g.module?.id ?? `unassigned-${gi}`}>
+                      <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-foreground">
+                        <Layers className="w-3.5 h-3.5 text-primary" />
+                        {g.module?.title ?? 'Other lessons'}
+                        <span className="ml-auto text-muted-foreground font-normal">{g.lessons.length}</span>
+                      </div>
+                      <div className="space-y-1">
+                        {g.lessons.map((l, i) => {
+                          const active = activeLesson?.id === l.id;
+                          return (
+                            <button key={l.id} onClick={() => setActiveLesson(l)}
+                              className={`w-full text-left flex items-start gap-3 p-2.5 rounded-lg transition-colors ${active ? 'bg-primary/10 text-primary' : 'hover:bg-secondary'}`}>
+                              <div className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-semibold flex-shrink-0 ${active ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>{i + 1}</div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium truncate">{l.title}</div>
+                                <div className="flex gap-1 mt-0.5 text-muted-foreground">
+                                  {l.video_url && <Video className="w-3 h-3" />}
+                                  {l.pdf_url && <FileText className="w-3 h-3" />}
+                                  {l.external_url && <Link2 className="w-3 h-3" />}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </aside>
             </div>
