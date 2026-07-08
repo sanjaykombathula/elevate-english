@@ -6,12 +6,13 @@ import { BrandMark } from '@/components/BrandMark';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, BookOpen, User, Settings, LogOut, Menu, X,
-  ShieldCheck, Users, ClipboardList, Megaphone, Sun, Moon,
+  ShieldCheck, Users, ClipboardList, Megaphone, Sun, Moon, GraduationCap, Library,
 } from 'lucide-react';
 
 const studentNav = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/modules', label: 'Modules', icon: BookOpen },
+  { path: '/courses', label: 'My Courses', icon: GraduationCap },
   { path: '/profile', label: 'Profile', icon: User },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
@@ -19,6 +20,7 @@ const studentNav = [
 const adminNav = [
   { path: '/admin/dashboard', label: 'Admin', icon: ShieldCheck },
   { path: '/admin', label: 'Students', icon: Users },
+  { path: '/admin/courses', label: 'LMS', icon: Library },
   { path: '/admin/questions', label: 'Questions', icon: ClipboardList },
   { path: '/admin/announcements', label: 'Announcements', icon: Megaphone },
 ];
