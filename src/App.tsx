@@ -24,6 +24,8 @@ const AdminDashboardPage = lazy(() => import("./pages/AdminDashboard"));
 const AdminQuestions = lazy(() => import("./pages/AdminQuestions"));
 const AdminAnnouncements = lazy(() => import("./pages/AdminAnnouncements"));
 const AdminImportPage = lazy(() => import("./pages/AdminImport"));
+const AdminCoursesPage = lazy(() => import("./pages/AdminCourses"));
+const CoursesPage = lazy(() => import("./pages/Courses"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
